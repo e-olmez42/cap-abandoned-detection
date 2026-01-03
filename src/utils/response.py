@@ -1,6 +1,6 @@
 
 from sdks.novavision.src.helper.package import PackageHelper
-from capsule.AbandonedDetection.src.models.PackageModel import PackageModel,OutputDetections, PackageConfigs, ConfigExecutor, AbandonedDetectionOutputs, AbandonedDetectionResponse, AbandonedDetectionExecutor, OutputImage
+from capsules.AbandonedDetection.src.models.PackageModel import PackageModel,OutputDetections, PackageConfigs, ConfigExecutor, AbandonedDetectionOutputs, AbandonedDetectionResponse, AbandonedDetectionExecutor, OutputImage
 
 
 def build_response(context):
