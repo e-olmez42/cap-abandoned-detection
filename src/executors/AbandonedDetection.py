@@ -3,6 +3,8 @@ import os
 import cv2
 import sys
 import numpy as np
+import uuid
+from datetime import datetime
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../'))
 
@@ -12,6 +14,8 @@ from sdks.novavision.src.helper.executor import Executor
 from sdks.novavision.src.base.model import Detection, BoundingBox
 from capsules.AbandonedDetection.src.utils.response import build_response
 from capsules.AbandonedDetection.src.models.PackageModel import PackageModel
+from capsules.AbandonedDetection.src.models.PackageModel import Image as ImageModel
+
 
 
 class AbandonedDetection(Capsule):
@@ -25,6 +29,10 @@ class AbandonedDetection(Capsule):
         self.inputImageOne = self.request.get_param("inputImageOne")
         self.inputImageTwo = self.request.get_param("inputImageTwo")
         self.max_energy = self.bootstrap.get("max_energy")
+        uID = str(uuid.uuid4())
+        self.image = ImageModel(name="Image_" + uID, uID=uID, mimeType="image/jpg", encoding="bytes", value=None, r_key='',
+                           type="Image", timestamp=datetime.now().timestamp())
+
 
     @staticmethod
     def bootstrap(config: dict) -> dict:
@@ -108,6 +116,10 @@ class AbandonedDetection(Capsule):
                 )
             )
 
+        self.image.value = alarm_mask
+        self.image = Image.set_frame(
+            img=self.image, package_uID=self.uID, redis_db=self.redis_db
+        )
         return build_response(context=self)
 
 
