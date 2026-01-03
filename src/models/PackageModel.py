@@ -1,11 +1,28 @@
 
 from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
-from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
+from sdks.novavision.src.base.model import Package,Detection, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
 
 
-class InputImage(Input):
-    name: Literal["inputImage"] = "inputImage"
+class InputImageOne(Input):
+    name: Literal["inputImageOne"] = "inputImageOne"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        value = values.get('value')
+        if isinstance(value, Image):
+            return "object"
+        elif isinstance(value, list):
+            return "list"
+
+    class Config:
+        title = "Image"
+
+
+class InputImageTwo(Input):
+    name: Literal["inputImageTwo"] = "inputImageTwo"
     value: Union[List[Image], Image]
     type: str = "object"
 
@@ -37,6 +54,13 @@ class OutputImage(Output):
     class Config:
         title = "Image"
 
+class OutputDetections(Output):
+    name: Literal["outputDetections"] = "outputDetections"
+    value: List[Detection]
+    type: Literal["list"] = "list"
+
+    class Config:
+        title = "Detections"
 
 class SSIMFalse(Config):
     name: Literal["False"] = "False"
@@ -56,7 +80,6 @@ class SSIMFalseTrue(Config):
 
     class Config:
         title = "Enable"
-
 
 
 class TimeToStatic(Config):
@@ -88,19 +111,27 @@ class ThresholdBeta(Config):
     class Config:
         title = "Beta"
 
+class SSIM(Config):
+    name: Literal["ssim"] = "ssim",
+    value: Union[SSIMFalse, SSIMFalseTrue]
+    type: Literal["object"] = "object"
+    field: Literal["dropdownlist"] = "dropdownlist"
 
 class AbandonedDetectionInputs(Inputs):
-    inputImage: InputImage
+    inputImageOne: InputImageOne
+    inputImageTwo: InputImageTwo
 
 
 class AbandonedDetectionConfigs(Configs):
     timeToStatic: TimeToStatic
     alpha: ThresholdAlpha
     beta: ThresholdBeta
+    ssim: SSIM
 
 
 class AbandonedDetectionOutputs(Outputs):
     outputImage: OutputImage
+    outputDetections: OutputDetections
 
 
 class AbandonedDetectionRequest(Request):
@@ -115,6 +146,7 @@ class AbandonedDetectionRequest(Request):
 
 class AbandonedDetectionResponse(Response):
     outputs: AbandonedDetectionOutputs
+
 
 
 class AbandonedDetectionExecutor(Config):
