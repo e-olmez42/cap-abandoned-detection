@@ -4,8 +4,8 @@ from typing import List, Optional, Union, Literal
 from sdks.novavision.src.base.model import Package,Detection, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
 
 
-class InputImageOne(Input):
-    name: Literal["inputImageOne"] = "inputImageOne"
+class InputImage(Input):
+    name: Literal["inputImage"] = "inputImage"
     value: Union[List[Image], Image]
     type: str = "object"
 
@@ -20,9 +20,8 @@ class InputImageOne(Input):
     class Config:
         title = "Image"
 
-
-class InputImageTwo(Input):
-    name: Literal["inputImageTwo"] = "inputImageTwo"
+class InputMaskShort(Input):
+    name: Literal["inputMaskShort"] = "inputMaskShort"
     value: Union[List[Image], Image]
     type: str = "object"
 
@@ -35,7 +34,24 @@ class InputImageTwo(Input):
             return "list"
 
     class Config:
-        title = "Image"
+        title = "Mask Short FG"
+
+
+class InputMaskLong(Input):
+    name: Literal["inputMaskLong"] = "inputMaskLong"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        value = values.get('value')
+        if isinstance(value, Image):
+            return "object"
+        elif isinstance(value, list):
+            return "list"
+
+    class Config:
+        title = "Mask Long FG"
 
 
 class OutputImage(Output):
@@ -118,8 +134,9 @@ class SSIM(Config):
     field: Literal["dropdownlist"] = "dropdownlist"
 
 class AbandonedDetectionInputs(Inputs):
-    inputImageOne: InputImageOne
-    inputImageTwo: InputImageTwo
+    inputImage: InputImage
+    inputMaskShort: InputMaskShort
+    inputMaskLong: InputMaskLong
 
 
 class AbandonedDetectionConfigs(Configs):
