@@ -1,13 +1,14 @@
 
 from sdks.novavision.src.helper.package import PackageHelper
-from components.Package.src.models.PackageModel import PackageModel, PackageConfigs, ConfigExecutor, PackageOutputs, PackageResponse, PackageExecutor, OutputImage
+from capsule.AbandonedDetection.src.models.PackageModel import PackageModel,OutputDetections, PackageConfigs, ConfigExecutor, AbandonedDetectionOutputs, AbandonedDetectionResponse, AbandonedDetectionExecutor, OutputImage
 
 
 def build_response(context):
     outputImage = OutputImage(value=context.image)
-    Outputs = PackageOutputs(outputImage=outputImage)
-    packageResponse = PackageResponse(outputs=Outputs)
-    packageExecutor = PackageExecutor(value=packageResponse)
+    outputDetections = OutputDetections(value=context.detections)
+    Outputs = AbandonedDetectionOutputs(outputImage=outputImage, outputDetections=outputDetections)
+    packageResponse = AbandonedDetectionResponse(outputs=Outputs)
+    packageExecutor = AbandonedDetectionExecutor(value=packageResponse)
     executor = ConfigExecutor(value=packageExecutor)
     packageConfigs = PackageConfigs(executor=executor)
     package = PackageHelper(packageModel=PackageModel, packageConfigs=packageConfigs)
