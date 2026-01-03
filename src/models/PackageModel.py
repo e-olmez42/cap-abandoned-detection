@@ -124,7 +124,7 @@ class AbandonedDetectionExecutor(Config):
     field: Literal["option"] = "option"
 
     class Config:
-        title = "AbandonedDetection"
+        title = "Abandoned Detection"
         json_schema_extra = {
             "target": {
                 "value": 0
@@ -145,11 +145,11 @@ class ConfigExecutor(Config):
         }
 
 
-class AbandonedDetectionConfigs(Configs):
+class PackageConfigs(Configs):
     executor: ConfigExecutor
 
 
-class AbandonedDetectionModel(AbandonedDetection):
-    configs: AbandonedDetectionConfigs
+class PackageModel(AbandonedDetection):
+    configs: PackageConfigs
     type: Literal["capsule"] = "capsule"
     name: Literal["AbandonedDetection"] = "AbandonedDetection"
