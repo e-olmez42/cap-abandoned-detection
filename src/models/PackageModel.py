@@ -149,7 +149,7 @@ class PackageConfigs(Configs):
     executor: ConfigExecutor
 
 
-class PackageModel(AbandonedDetection):
+class PackageModel(Package):
     configs: PackageConfigs
     type: Literal["capsule"] = "capsule"
     name: Literal["AbandonedDetection"] = "AbandonedDetection"
