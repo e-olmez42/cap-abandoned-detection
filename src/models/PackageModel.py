@@ -1,7 +1,7 @@
 
 from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
-from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
+from sdks.novavision.src.base.model import AbandonedDetection, Image, Inputs, Configs, Outputs, Response, Request, Output, Input, Config
 
 
 class InputImage(Input):
@@ -38,7 +38,7 @@ class OutputImage(Output):
         title = "Image"
 
 
-class KeepSideFalse(Config):
+class SSIMFalse(Config):
     name: Literal["False"] = "False"
     value: Literal[False] = False
     type: Literal["bool"] = "bool"
@@ -48,7 +48,7 @@ class KeepSideFalse(Config):
         title = "Disable"
 
 
-class KeepSideTrue(Config):
+class SSIMFalseTrue(Config):
     name: Literal["True"] = "True"
     value: Literal[True] = True
     type: Literal["bool"] = "bool"
@@ -58,49 +58,54 @@ class KeepSideTrue(Config):
         title = "Enable"
 
 
-class KeepSideBBox(Config):
-    """
-        Rotate image without catting off sides.
-    """
-    name: Literal["KeepSide"] = "KeepSide"
-    value: Union[KeepSideTrue, KeepSideFalse]
-    type: Literal["object"] = "object"
-    field: Literal["dropdownlist"] = "dropdownlist"
 
-    class Config:
-        title = "Keep Sides"
-
-
-class Degree(Config):
-    """
-        Positive angles specify counterclockwise rotation while negative angles indicate clockwise rotation.
-    """
-    name: Literal["Degree"] = "Degree"
-    value: int = Field(ge=-359.0, le=359.0,default=0)
+class TimeToStatic(Config):
+    name: Literal["timeToStatic"] = "timeToStatic"
+    value: float = Field(default=10.0, ge=0)
     type: Literal["number"] = "number"
     field: Literal["textInput"] = "textInput"
-    placeHolder: Literal["[-359, 359]"] = "[-359, 359]"
 
     class Config:
-        title = "Angle"
+        title = "Background Init Duration"
 
 
-class PackageInputs(Inputs):
+class ThresholdAlpha(Config):
+    name: Literal["alpha"] = "alpha"
+    value: float = Field(default=0.8, ge=0)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "Alpha"
+
+
+class ThresholdBeta(Config):
+    name: Literal["beta"] = "beta"
+    value: float = Field(default=0.3, ge=0)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "Beta"
+
+
+class AbandonedDetectionInputs(Inputs):
     inputImage: InputImage
 
 
-class PackageConfigs(Configs):
-    degree: Degree
-    drawBBox: KeepSideBBox
+class AbandonedDetectionConfigs(Configs):
+    timeToStatic: TimeToStatic
+    alpha: ThresholdAlpha
+    beta: ThresholdBeta
 
 
-class PackageOutputs(Outputs):
+class AbandonedDetectionOutputs(Outputs):
     outputImage: OutputImage
 
 
-class PackageRequest(Request):
-    inputs: Optional[PackageInputs]
-    configs: PackageConfigs
+class AbandonedDetectionRequest(Request):
+    inputs: Optional[AbandonedDetectionInputs]
+    configs: AbandonedDetectionConfigs
 
     class Config:
         json_schema_extra = {
@@ -108,18 +113,18 @@ class PackageRequest(Request):
         }
 
 
-class PackageResponse(Response):
-    outputs: PackageOutputs
+class AbandonedDetectionResponse(Response):
+    outputs: AbandonedDetectionOutputs
 
 
-class PackageExecutor(Config):
-    name: Literal["Package"] = "Package"
-    value: Union[PackageRequest, PackageResponse]
+class AbandonedDetectionExecutor(Config):
+    name: Literal["AbandonedDetection"] = "AbandonedDetection"
+    value: Union[AbandonedDetectionRequest, AbandonedDetectionResponse]
     type: Literal["object"] = "object"
     field: Literal["option"] = "option"
 
     class Config:
-        title = "Package"
+        title = "AbandonedDetection"
         json_schema_extra = {
             "target": {
                 "value": 0
@@ -129,7 +134,7 @@ class PackageExecutor(Config):
 
 class ConfigExecutor(Config):
     name: Literal["ConfigExecutor"] = "ConfigExecutor"
-    value: Union[PackageExecutor]
+    value: Union[AbandonedDetectionExecutor]
     type: Literal["executor"] = "executor"
     field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
 
@@ -140,11 +145,11 @@ class ConfigExecutor(Config):
         }
 
 
-class PackageConfigs(Configs):
+class AbandonedDetectionConfigs(Configs):
     executor: ConfigExecutor
 
 
-class PackageModel(Package):
-    configs: PackageConfigs
-    type: Literal["component"] = "component"
-    name: Literal["Package"] = "Package"
+class AbandonedDetectionModel(AbandonedDetection):
+    configs: AbandonedDetectionConfigs
+    type: Literal["capsule"] = "capsule"
+    name: Literal["AbandonedDetection"] = "AbandonedDetection"
