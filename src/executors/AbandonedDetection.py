@@ -26,8 +26,9 @@ class AbandonedDetection(Capsule):
         self.beta = self.request.get_param("beta")
         self.ssim = self.request.get_param("ssim")
         self.tau=12
-        self.inputImageOne = self.request.get_param("inputImageOne")
-        self.inputImageTwo = self.request.get_param("inputImageTwo")
+        self.frame = self.request.get_param("inputImage")
+        self.inputMaskShort = self.request.get_param("inputMaskShort")
+        self.inputMaskLong = self.request.get_param("inputMaskLong")
         self.max_energy = self.bootstrap.get("max_energy")
         uID = str(uuid.uuid4())
         self.image = ImageModel(name="Image_" + uID, uID=uID, mimeType="image/jpg", encoding="bytes", value=None, r_key='',
@@ -63,25 +64,37 @@ class AbandonedDetection(Capsule):
         return np.clip(ssim, 0, 1)
 
     def run(self):
+        frame = Image.get_frame(self.frame, self.redis_db).value
+        mask_short = Image.get_frame(self.inputMaskShort, self.redis_db).value
+        mask_long = Image.get_frame(self.inputMaskLong, self.redis_db).value
 
-        img1 = Image.get_frame(self.inputImageOne, self.redis_db).value
-        img2 = Image.get_frame(self.inputImageTwo, self.redis_db).value
+        if frame.ndim == 3:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = frame.copy()
 
-        if img1.ndim == 3:
-            img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-        if img2.ndim == 3:
-            img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+        if mask_short.ndim == 3:
+            mask_short = cv2.cvtColor(mask_short, cv2.COLOR_BGR2GRAY)
+        if mask_long.ndim == 3:
+            mask_long = cv2.cvtColor(mask_long, cv2.COLOR_BGR2GRAY)
 
-        img1 = img1.astype(np.uint8)
-        img2 = img2.astype(np.uint8)
+        mask_short = mask_short.astype(np.uint8)
+        mask_long = mask_long.astype(np.uint8)
+        gray = gray.astype(np.uint8)
 
-        ssim_map = self.compute_ssim_map(img1, img2)
-        ssim_mask = (ssim_map < self.tau)
+        mask_short = (mask_short > 0)
+        mask_long = (mask_long > 0)
+
+        if bool(self.ssim):
+            ssim_map = self.compute_ssim_map(mask_short.astype(np.uint8) * 255,
+                                             mask_long.astype(np.uint8) * 255)
+            ssim_mask = (ssim_map < self.tau)
+            candidate = mask_short & (~mask_long) & ssim_mask
+        else:
+            candidate = mask_short & (~mask_long)
 
         if self.bootstrap["heatmap"] is None:
-            self.bootstrap["heatmap"]= np.zeros_like(img1, dtype=np.float32)
-
-        candidate = (img1 > 0) & ssim_mask
+            self.bootstrap["heatmap"]= np.zeros_like(gray, dtype=np.float32)
 
         self.bootstrap["heatmap"][candidate] += self.alpha
         self.bootstrap["heatmap"][~candidate] -= self.beta
