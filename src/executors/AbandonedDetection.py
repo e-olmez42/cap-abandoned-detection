@@ -25,7 +25,8 @@ class AbandonedDetection(Capsule):
         self.alpha = self.request.get_param("alpha")
         self.beta = self.request.get_param("beta")
         self.ssim = self.request.get_param("ssim")
-        self.tau=12
+        self.tau=0.8
+        self.Q=12
         self.frame = self.request.get_param("inputImage")
         self.inputMaskShort = self.request.get_param("inputMaskShort")
         self.inputMaskLong = self.request.get_param("inputMaskLong")
@@ -82,36 +83,39 @@ class AbandonedDetection(Capsule):
         mask_long = mask_long.astype(np.uint8)
         gray = gray.astype(np.uint8)
 
-        mask_short = (mask_short > 0)
-        mask_long = (mask_long > 0)
-
         if bool(self.ssim):
-            ssim_map = self.compute_ssim_map(mask_short.astype(np.uint8) * 255,
-                                             mask_long.astype(np.uint8) * 255)
-            ssim_mask = (ssim_map < self.tau)
-            candidate = mask_short & (~mask_long) & ssim_mask
+            ssim_map = self.compute_ssim_map(gray,mask_long)
+            rsimm = cv2.blur(ssim_map, (self.Q, self.Q))
+            rsimm = np.clip(rsimm, 0, 1)
+            ssim_mask = (rsimm < self.tau)
+            candidate = (
+                    (mask_long == 255) &
+                    (mask_short == 0) &
+                    (ssim_mask)
+            )
         else:
-            candidate = mask_short & (~mask_long)
+            candidate = (
+                    (mask_long == 255) &
+                    (mask_short == 0)
+            )
 
         if self.bootstrap["heatmap"] is None:
             self.bootstrap["heatmap"]= np.zeros_like(gray, dtype=np.float32)
 
         self.bootstrap["heatmap"][candidate] += self.alpha
         self.bootstrap["heatmap"][~candidate] -= self.beta
-        np.clip(self.bootstrap["heatmap"], 0, self.max_energy, out=self.bootstrap["heatmap"])
+        thresh_map_u8 = np.clip(self.bootstrap["heatmap"], 0, 255).astype(np.uint8)
 
-        alarm_mask =self.bootstrap["heatmap"] > (0.7 * self.max_energy)
-        alarm_mask = alarm_mask.astype(np.uint8) * 255
 
         contours, _ = cv2.findContours(
-            alarm_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            thresh_map_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
 
         self.detections = []
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < 400:
+            if area < 500:
                 continue
 
             x, y, w, h = cv2.boundingRect(cnt)
@@ -129,7 +133,7 @@ class AbandonedDetection(Capsule):
                 )
             )
 
-        self.image.value = alarm_mask
+        self.image.value = thresh_map_u8
         self.image = Image.set_frame(
             img=self.image, package_uID=self.uID, redis_db=self.redis_db
         )
