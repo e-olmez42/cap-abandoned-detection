@@ -26,7 +26,7 @@ class AbandonedDetection(Capsule):
         self.beta = self.request.get_param("beta")
         self.ssim = self.request.get_param("ssim")
         self.tau = self.request.get_param("ssimThreshold")
-        self.Q = self.request.get_param("simmKernelSize")
+        self.Q = self.request.get_param("ssimKernelSize")
         self.frame = self.request.get_param("inputImage")
         self.warning = self.request.get_param("warningRatio")
         self.inputMaskShort = self.request.get_param("inputMaskShort")
