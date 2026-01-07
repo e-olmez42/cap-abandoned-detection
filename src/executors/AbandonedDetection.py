@@ -25,12 +25,14 @@ class AbandonedDetection(Capsule):
         self.alpha = self.request.get_param("alpha")
         self.beta = self.request.get_param("beta")
         self.ssim = self.request.get_param("ssim")
-        self.tau=0.8
-        self.Q=12
+        self.tau = self.request.get_param("ssimThreshold")
+        self.Q = self.request.get_param("simmKernelSize")
         self.frame = self.request.get_param("inputImage")
+        self.warning = self.request.get_param("warningRatio")
         self.inputMaskShort = self.request.get_param("inputMaskShort")
         self.inputMaskLong = self.request.get_param("inputMaskLong")
         self.max_energy = self.bootstrap.get("max_energy")
+        self.warning_threshold = self.max_energy * self.warning
         uID = str(uuid.uuid4())
         self.image = ImageModel(name="Image_" + uID, uID=uID, mimeType="image/jpg", encoding="bytes", value=None, r_key='',
                            type="Image", timestamp=datetime.now().timestamp())
@@ -108,9 +110,9 @@ class AbandonedDetection(Capsule):
         self.bootstrap["heatmap"][~candidate] -= self.beta
         np.clip(self.bootstrap["heatmap"], 0, self.max_energy, out=self.bootstrap["heatmap"])
         thresh_map_u8 = self.bootstrap["heatmap"]
-        warning_threshold = self.max_energy * 0.3
+
         _, thresh_map = cv2.threshold(
-            thresh_map_u8, warning_threshold, 255, cv2.THRESH_BINARY
+            thresh_map_u8, self.warning_threshold, 255, cv2.THRESH_BINARY
         )
 
         contours, _ = cv2.findContours(
