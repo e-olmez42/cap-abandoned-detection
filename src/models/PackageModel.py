@@ -172,7 +172,7 @@ class AbandonedDetectionConfigs(Configs):
     beta: ThresholdBeta
     ssim: SSIM
     ssimThreshold: SSIMThreshold
-    simmKernelSize: SSIMKernelSize
+    ssimKernelSize: SSIMKernelSize
     warningRatio: WarningRatio
 
 
