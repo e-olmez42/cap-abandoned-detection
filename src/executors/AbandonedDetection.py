@@ -41,6 +41,7 @@ class AbandonedDetection(Capsule):
         max_energy = 100
         return {"max_energy": max_energy, "heatmap":None}
 
+
     def compute_ssim_map(self,img1, img2):
         I1 = img1.astype(np.float32)
         I2 = img2.astype(np.float32)
@@ -73,6 +74,7 @@ class AbandonedDetection(Capsule):
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         else:
             gray = frame.copy()
+        current_frame = cv2.GaussianBlur(gray, (5, 5), 0)
 
         if mask_short.ndim == 3:
             mask_short = cv2.cvtColor(mask_short, cv2.COLOR_BGR2GRAY)
@@ -81,10 +83,10 @@ class AbandonedDetection(Capsule):
 
         mask_short = mask_short.astype(np.uint8)
         mask_long = mask_long.astype(np.uint8)
-        gray = gray.astype(np.uint8)
+        current_frame = current_frame.astype(np.uint8)
 
         if bool(self.ssim):
-            ssim_map = self.compute_ssim_map(gray,mask_long)
+            ssim_map = self.compute_ssim_map(current_frame,mask_long)
             rsimm = cv2.blur(ssim_map, (self.Q, self.Q))
             rsimm = np.clip(rsimm, 0, 1)
             ssim_mask = (rsimm < self.tau)
@@ -100,15 +102,18 @@ class AbandonedDetection(Capsule):
             )
 
         if self.bootstrap["heatmap"] is None:
-            self.bootstrap["heatmap"]= np.zeros_like(gray, dtype=np.float32)
+            self.bootstrap["heatmap"]= np.zeros_like(current_frame, dtype=np.float32)
 
         self.bootstrap["heatmap"][candidate] += self.alpha
         self.bootstrap["heatmap"][~candidate] -= self.beta
-        thresh_map_u8 = np.clip(self.bootstrap["heatmap"], 0, 255).astype(np.uint8)
+        thresh_map_u8 = np.clip(self.bootstrap["heatmap"], 0,self.max_energy)
 
+        _, thresh_map = cv2.threshold(
+            thresh_map_u8, 130, 255, cv2.THRESH_BINARY
+        )
 
         contours, _ = cv2.findContours(
-            thresh_map_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            thresh_map.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
 
         self.detections = []
