@@ -106,10 +106,11 @@ class AbandonedDetection(Capsule):
 
         self.bootstrap["heatmap"][candidate] += self.alpha
         self.bootstrap["heatmap"][~candidate] -= self.beta
-        thresh_map_u8 = np.clip(self.bootstrap["heatmap"], 0,self.max_energy)
-
+        np.clip(self.bootstrap["heatmap"], 0, self.max_energy, out=self.bootstrap["heatmap"])
+        thresh_map_u8 = self.bootstrap["heatmap"]
+        warning_threshold = self.max_energy * 0.3
         _, thresh_map = cv2.threshold(
-            thresh_map_u8, 130, 255, cv2.THRESH_BINARY
+            thresh_map_u8, warning_threshold, 255, cv2.THRESH_BINARY
         )
 
         contours, _ = cv2.findContours(
