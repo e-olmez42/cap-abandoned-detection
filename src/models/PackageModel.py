@@ -127,6 +127,33 @@ class ThresholdBeta(Config):
     class Config:
         title = "Beta"
 
+class SSIMThreshold(Config):
+    name: Literal["ssimThreshold"] = "ssimThreshold"
+    value: float = Field(default=0.8, ge=0, le=1)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "SSIM Threshold"
+
+class SSIMKernelSize(Config):
+    name: Literal["ssimKernelSize"] = "ssimKernelSize"
+    value: int = Field(default=12, ge=1, le=51)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "SSIM Kernel Size"
+
+class WarningRatio(Config):
+    name: Literal["warningRatio"] = "warningRatio"
+    value: float = Field(default=0.3, ge=0, le=1)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "Warning Ratio"
+
 class SSIM(Config):
     name: Literal["ssim"] = "ssim",
     value: Union[SSIMFalse, SSIMFalseTrue]
@@ -144,6 +171,9 @@ class AbandonedDetectionConfigs(Configs):
     alpha: ThresholdAlpha
     beta: ThresholdBeta
     ssim: SSIM
+    ssimThreshold: SSIMThreshold
+    simmKernelSize: SSIMKernelSize
+    warningRatio: WarningRatio
 
 
 class AbandonedDetectionOutputs(Outputs):
