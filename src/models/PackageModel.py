@@ -78,6 +78,43 @@ class OutputDetections(Output):
     class Config:
         title = "Detections"
 
+
+
+class SSIMThreshold(Config):
+    """
+    Threshold value for SSIM similarity comparison.
+    Determines how much the current foreground mask can differ from
+    the reference background mask before being considered a foreground change.
+    Higher values are stricter, lower values allow more variation.
+    """
+    name: Literal["ssimThreshold"] = "ssimThreshold"
+    value: float = Field(default=0.8, ge=0, le=1)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "SSIM Threshold"
+        json_schema_extra = {
+            "shortDescription": "Similarity threshold for SSIM comparison"
+        }
+
+class SSIMKernelSize(Config):
+    """
+    Kernel size used in SSIM computation. Larger kernels consider
+    broader areas of the image for similarity measurement, smoothing
+    local variations. Smaller kernels make SSIM more sensitive to local changes.
+    """
+    name: Literal["ssimKernelSize"] = "ssimKernelSize"
+    value: int = Field(default=12, ge=1, le=51)
+    type: Literal["number"] = "number"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "SSIM Kernel Size"
+        json_schema_extra = {
+            "shortDescription": "Size of the window used in SSIM calculation"
+        }
+
 class SSIMFalse(Config):
     name: Literal["False"] = "False"
     value: Literal[False] = False
@@ -89,6 +126,8 @@ class SSIMFalse(Config):
 
 
 class SSIMFalseTrue(Config):
+    ssimThreshold: SSIMThreshold
+    ssimKernelSize: SSIMKernelSize
     name: Literal["True"] = "True"
     value: Literal[True] = True
     type: Literal["bool"] = "bool"
@@ -153,41 +192,6 @@ class ThresholdBeta(Config):
         }
 
 
-class SSIMThreshold(Config):
-    """
-    Threshold value for SSIM similarity comparison.
-    Determines how much the current foreground mask can differ from
-    the reference background mask before being considered a foreground change.
-    Higher values are stricter, lower values allow more variation.
-    """
-    name: Literal["ssimThreshold"] = "ssimThreshold"
-    value: float = Field(default=0.8, ge=0, le=1)
-    type: Literal["number"] = "number"
-    field: Literal["textInput"] = "textInput"
-
-    class Config:
-        title = "SSIM Threshold"
-        json_schema_extra = {
-            "shortDescription": "Similarity threshold for SSIM comparison"
-        }
-
-class SSIMKernelSize(Config):
-    """
-    Kernel size used in SSIM computation. Larger kernels consider
-    broader areas of the image for similarity measurement, smoothing
-    local variations. Smaller kernels make SSIM more sensitive to local changes.
-    """
-    name: Literal["ssimKernelSize"] = "ssimKernelSize"
-    value: int = Field(default=12, ge=1, le=51)
-    type: Literal["number"] = "number"
-    field: Literal["textInput"] = "textInput"
-
-    class Config:
-        title = "SSIM Kernel Size"
-        json_schema_extra = {
-            "shortDescription": "Size of the window used in SSIM calculation"
-        }
-
 class WarningRatio(Config):
     """
     Ratio of detected foreground pixels required to trigger a warning.
@@ -235,8 +239,6 @@ class AbandonedDetectionConfigs(Configs):
     alpha: ThresholdAlpha
     beta: ThresholdBeta
     ssim: SSIM
-    ssimThreshold: SSIMThreshold
-    ssimKernelSize: SSIMKernelSize
     warningRatio: WarningRatio
 
 
