@@ -219,7 +219,7 @@ class SSIM(Config):
     name: Literal["ssim"] = "ssim",
     value: Union[SSIMFalse, SSIMFalseTrue]
     type: Literal["object"] = "object"
-    field: Literal["dropdownlist"] = "dropdownlist"
+    field: Literal["dependentDropdownlist"] = "dependentDropdownlist"
 
 
     class Config:
