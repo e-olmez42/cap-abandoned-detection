@@ -99,6 +99,12 @@ class SSIMFalseTrue(Config):
 
 
 class TimeToStatic(Config):
+    """
+       Defines how long (in seconds) the model waits before considering
+       a pixel as part of the static background.
+       This allows the system to ignore transient movement at the start
+       and stabilize the background model before detecting abandoned objects.
+       """
     name: Literal["timeToStatic"] = "timeToStatic"
     value: float = Field(default=10.0, ge=0)
     type: Literal["number"] = "number"
@@ -106,9 +112,17 @@ class TimeToStatic(Config):
 
     class Config:
         title = "Background Init Duration"
+        json_schema_extra = {
+            "shortDescription": "Duration to build initial background model"
+        }
 
 
 class ThresholdAlpha(Config):
+    """
+     Alpha threshold for pixel-level foreground detection.
+     Higher values make the algorithm more sensitive to small changes,
+     while lower values reduce false positives but may miss subtle movements.
+     """
     name: Literal["alpha"] = "alpha"
     value: float = Field(default=0.8, ge=0)
     type: Literal["number"] = "number"
@@ -116,9 +130,17 @@ class ThresholdAlpha(Config):
 
     class Config:
         title = "Alpha"
+        json_schema_extra = {
+            "shortDescription": "Foreground sensitivity coefficient"
+        }
 
 
 class ThresholdBeta(Config):
+    """
+    Beta threshold for pixel-level foreground detection.
+    Works alongside Alpha to control detection robustness.
+    Lower values are stricter, higher values make detection more permissive.
+    """
     name: Literal["beta"] = "beta"
     value: float = Field(default=0.3, ge=0)
     type: Literal["number"] = "number"
@@ -126,8 +148,18 @@ class ThresholdBeta(Config):
 
     class Config:
         title = "Beta"
+        json_schema_extra = {
+            "shortDescription": "Foreground detection tolerance"
+        }
+
 
 class SSIMThreshold(Config):
+    """
+    Threshold value for SSIM similarity comparison.
+    Determines how much the current foreground mask can differ from
+    the reference background mask before being considered a foreground change.
+    Higher values are stricter, lower values allow more variation.
+    """
     name: Literal["ssimThreshold"] = "ssimThreshold"
     value: float = Field(default=0.8, ge=0, le=1)
     type: Literal["number"] = "number"
@@ -135,8 +167,16 @@ class SSIMThreshold(Config):
 
     class Config:
         title = "SSIM Threshold"
+        json_schema_extra = {
+            "shortDescription": "Similarity threshold for SSIM comparison"
+        }
 
 class SSIMKernelSize(Config):
+    """
+    Kernel size used in SSIM computation. Larger kernels consider
+    broader areas of the image for similarity measurement, smoothing
+    local variations. Smaller kernels make SSIM more sensitive to local changes.
+    """
     name: Literal["ssimKernelSize"] = "ssimKernelSize"
     value: int = Field(default=12, ge=1, le=51)
     type: Literal["number"] = "number"
@@ -144,8 +184,16 @@ class SSIMKernelSize(Config):
 
     class Config:
         title = "SSIM Kernel Size"
+        json_schema_extra = {
+            "shortDescription": "Size of the window used in SSIM calculation"
+        }
 
 class WarningRatio(Config):
+    """
+    Ratio of detected foreground pixels required to trigger a warning.
+    Lower values make the system more sensitive to small abandoned objects,
+    while higher values reduce false alarms in crowded or noisy scenes.
+    """
     name: Literal["warningRatio"] = "warningRatio"
     value: float = Field(default=0.3, ge=0, le=1)
     type: Literal["number"] = "number"
@@ -153,12 +201,28 @@ class WarningRatio(Config):
 
     class Config:
         title = "Warning Ratio"
+        json_schema_extra = {
+            "shortDescription": "Fraction of foreground pixels to trigger warning"
+        }
 
 class SSIM(Config):
+    """
+    Enable or disable the use of SSIM (Structural Similarity Index) for
+    abandoned object detection. When enabled, SSIM compares the current
+    foreground mask to reference background masks to improve detection
+    accuracy in complex scenes.
+    """
     name: Literal["ssim"] = "ssim",
     value: Union[SSIMFalse, SSIMFalseTrue]
     type: Literal["object"] = "object"
     field: Literal["dropdownlist"] = "dropdownlist"
+
+
+    class Config:
+        title = "SSIM Usage"
+        json_schema_extra = {
+            "shortDescription": "Enable or disable SSIM for improved detection"
+        }
 
 class AbandonedDetectionInputs(Inputs):
     inputImage: InputImage
